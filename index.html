@@ -1,0 +1,844 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff">
+<title>文章学習帳</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #ffffff;
+  color: #222222;
+  font-family: -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "Noto Sans JP", sans-serif;
+  line-height: 1.7;
+}
+
+button, input, textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+header {
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid #eeeeee;
+  background: #ffffff;
+}
+
+.header-inner {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 23px;
+  letter-spacing: 0.03em;
+}
+
+header p {
+  margin: 3px 0 0;
+  color: #777777;
+  font-size: 13px;
+}
+
+main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 18px 14px 50px;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  margin-bottom: 20px;
+}
+
+.tab {
+  min-height: 48px;
+  padding: 9px 4px;
+  border: 1px solid #dddddd;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #444444;
+  font-size: 13px;
+}
+
+.tab.active {
+  border-color: #222222;
+  background: #222222;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.panel {
+  margin-bottom: 18px;
+}
+
+h2 {
+  margin: 0 0 14px;
+  font-size: 19px;
+}
+
+h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.muted {
+  color: #777777;
+  font-size: 13px;
+}
+
+.card {
+  padding: 22px 18px;
+  border: 1px solid #e5e5e5;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.card-label {
+  margin-bottom: 8px;
+  color: #777777;
+  font-size: 12px;
+}
+
+.card-title {
+  margin: 0 0 16px;
+  font-size: 19px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.card-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 17px;
+  line-height: 1.95;
+}
+
+.answer-box {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #eeeeee;
+}
+
+.answer-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 16px;
+  line-height: 1.9;
+}
+
+.progress {
+  margin: 0 0 12px;
+  color: #777777;
+  font-size: 13px;
+}
+
+button.primary {
+  border: 1px solid #222222;
+  background: #222222;
+  color: #ffffff;
+}
+
+button.secondary {
+  border: 1px solid #dddddd;
+  background: #ffffff;
+  color: #222222;
+}
+
+button.danger {
+  border: 1px solid #e5caca;
+  background: #ffffff;
+  color: #b52b2b;
+}
+
+.action-button {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 12px;
+  border-radius: 9px;
+  font-weight: 600;
+}
+
+.button-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.button-row button {
+  flex: 1;
+  min-width: 0;
+  min-height: 46px;
+  padding: 9px 5px;
+  border-radius: 9px;
+}
+
+.mode-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.mode-button {
+  padding: 8px 13px;
+  border: 1px solid #dddddd;
+  border-radius: 20px;
+  background: #ffffff;
+  color: #444444;
+  font-size: 13px;
+}
+
+.mode-button.active {
+  border-color: #222222;
+  background: #f1f1f1;
+  color: #111111;
+  font-weight: 600;
+}
+
+input, textarea {
+  display: block;
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid #dddddd;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #222222;
+  font-size: 16px;
+}
+
+textarea {
+  min-height: 150px;
+  resize: vertical;
+  line-height: 1.8;
+}
+
+#answerInput {
+  min-height: 100px;
+}
+
+input:focus, textarea:focus {
+  outline: 2px solid #bbbbbb;
+  outline-offset: 1px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.entry {
+  padding: 15px 0;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.entry:first-child {
+  padding-top: 0;
+}
+
+.entry:last-child {
+  border-bottom: 0;
+}
+
+.entry-title {
+  margin-bottom: 5px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.entry-preview {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #666666;
+  font-size: 14px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.entry-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.entry-actions button {
+  min-height: 39px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.empty {
+  padding: 35px 10px;
+  color: #777777;
+  text-align: center;
+  font-size: 14px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.status {
+  margin: 12px 0;
+  color: #555555;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+footer {
+  padding: 15px;
+  color: #888888;
+  text-align: center;
+  font-size: 12px;
+}
+
+@media (min-width: 600px) {
+  main {
+    padding-top: 26px;
+  }
+
+  .card {
+    padding: 30px;
+  }
+
+  .card-title {
+    font-size: 22px;
+  }
+
+  .card-body {
+    font-size: 18px;
+  }
+}
+</style>
+</head>
+
+<body>
+<header>
+  <div class="header-inner">
+    <h1>文章学習帳</h1>
+    <p>覚えたい文章を、少しずつ身につけよう。</p>
+  </div>
+</header>
+
+<main>
+  <nav class="tabs" aria-label="メニュー">
+    <button class="tab active" data-view="study">学習する</button>
+    <button class="tab" data-view="list">文章一覧</button>
+    <button class="tab" data-view="register">文章を登録</button>
+  </nav>
+
+  <!-- 学習画面 -->
+  <section id="studyView" class="panel">
+    <div class="mode-row">
+      <button class="mode-button active" data-mode="qa">
+        文章＋答え
+      </button>
+      <button class="mode-button" data-mode="text">
+        文章のみ
+      </button>
+    </div>
+
+    <div class="mode-row">
+      <button id="orderBtn" class="mode-button active">
+        順番に表示
+      </button>
+      <button id="randomBtn" class="mode-button">
+        ランダム表示
+      </button>
+    </div>
+
+    <p id="progress" class="progress">0 件登録されています</p>
+
+    <div class="card">
+      <div class="card-label">学習カード</div>
+      <h2 id="studyTitle" class="card-title">
+        文章を登録してください
+      </h2>
+
+      <div id="studyBody" class="card-body">
+        「文章を登録」から学習したい文章を追加できます。
+      </div>
+
+      <div id="answerArea" class="answer-box hidden">
+        <h3>答え・解説</h3>
+        <div id="studyAnswer" class="answer-text"></div>
+      </div>
+
+      <div id="answerControls">
+        <button id="showAnswerBtn"
+          class="action-button primary" style="margin-top:20px">
+          答えを表示する
+        </button>
+      </div>
+    </div>
+
+    <div class="button-row">
+      <button id="prevBtn" class="secondary">← 前へ</button>
+      <button id="nextBtn" class="primary">次へ →</button>
+    </div>
+
+    <div class="button-row">
+      <button id="editCurrentBtn" class="secondary">
+        この文章を編集
+      </button>
+    </div>
+  </section>
+
+  <!-- 一覧画面 -->
+  <section id="listView" class="panel hidden">
+    <h2>登録した文章</h2>
+    <p id="listCount" class="muted"></p>
+    <div id="entryList"></div>
+  </section>
+
+  <!-- 登録画面 -->
+  <section id="registerView" class="panel hidden">
+    <h2 id="formTitle">新しい文章を登録</h2>
+
+    <label class="form-label" for="titleInput">タイトル</label>
+    <input id="titleInput" maxlength="200"
+      placeholder="例：主任職試験・序論">
+
+    <label class="form-label" for="bodyInput">文章・問題文</label>
+    <textarea id="bodyInput"
+      placeholder="覚えたい文章を入力してください"></textarea>
+
+    <label class="form-label" for="answerInput">
+      答え・解説（任意）
+    </label>
+    <textarea id="answerInput"
+      placeholder="意味、解説、模範解答などを入力してください"></textarea>
+
+    <button id="saveBtn" class="action-button primary">
+      登録する
+    </button>
+
+    <button id="cancelBtn"
+      class="action-button secondary hidden"
+      style="margin-top:8px">
+      編集をキャンセル
+    </button>
+
+    <p id="status" class="status" aria-live="polite"></p>
+  </section>
+
+  <section class="panel">
+    <p class="muted">
+      保存先：このブラウザ内。通常はブラウザを閉じても保存されます。
+    </p>
+  </section>
+</main>
+
+<footer>文章学習帳</footer>
+
+<script>
+const STORAGE_KEY = "simpleStudyAppEntries_v1";
+
+let entries = [];
+let currentIndex = 0;
+let studyMode = "qa";
+let displayMode = "ordered";
+let currentView = "study";
+let editingId = null;
+let answerVisible = false;
+
+// HTML要素を取得
+const $ = id => document.getElementById(id);
+
+// 保存データを読み込む
+try {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  const parsed = saved ? JSON.parse(saved) : [];
+
+  if (Array.isArray(parsed)) {
+    entries = parsed.filter(item =>
+      item &&
+      typeof item.id === "string" &&
+      typeof item.title === "string" &&
+      typeof item.body === "string"
+    ).map(item => ({
+      id: item.id,
+      title: item.title,
+      body: item.body,
+      answer: typeof item.answer === "string" ? item.answer : ""
+    }));
+  }
+} catch (error) {
+  alert("保存データを読み込めませんでした。ブラウザの保存領域を確認してください。");
+}
+
+// データ保存
+function saveEntries() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    $("status").textContent = "保存しました。";
+    return true;
+  } catch (error) {
+    $("status").textContent =
+      "保存に失敗しました。ブラウザの保存容量を確認してください。";
+    return false;
+  }
+}
+
+// 画面切り替え
+function switchView(view) {
+  currentView = view;
+
+  $("studyView").classList.toggle("hidden", view !== "study");
+  $("listView").classList.toggle("hidden", view !== "list");
+  $("registerView").classList.toggle("hidden", view !== "register");
+
+  document.querySelectorAll(".tab").forEach(button => {
+    button.classList.toggle(
+      "active", button.dataset.view === view
+    );
+  });
+
+  if (view === "list") renderList();
+  if (view === "study") renderStudy();
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+document.querySelectorAll(".tab").forEach(button => {
+  button.addEventListener("click", () => {
+    switchView(button.dataset.view);
+  });
+});
+
+// 学習モード切り替え
+document.querySelectorAll("[data-mode]").forEach(button => {
+  button.addEventListener("click", () => {
+    studyMode = button.dataset.mode;
+
+    document.querySelectorAll("[data-mode]").forEach(item => {
+      item.classList.toggle("active", item === button);
+    });
+
+    answerVisible = false;
+    renderStudy();
+  });
+});
+
+// 表示順切り替え
+$("orderBtn").onclick = () => {
+  displayMode = "ordered";
+  currentIndex = 0;
+  answerVisible = false;
+  updateDisplayButtons();
+  renderStudy();
+};
+
+$("randomBtn").onclick = () => {
+  displayMode = "random";
+  chooseRandom();
+  answerVisible = false;
+  updateDisplayButtons();
+  renderStudy();
+};
+
+function updateDisplayButtons() {
+  $("orderBtn").classList.toggle(
+    "active", displayMode === "ordered"
+  );
+  $("randomBtn").classList.toggle(
+    "active", displayMode === "random"
+  );
+}
+
+function chooseRandom() {
+  if (entries.length <= 1) {
+    currentIndex = 0;
+    return;
+  }
+
+  const oldIndex = currentIndex;
+  let nextIndex;
+
+  do {
+    nextIndex = Math.floor(Math.random() * entries.length);
+  } while (nextIndex === oldIndex);
+
+  currentIndex = nextIndex;
+}
+
+// 学習カード表示
+function renderStudy() {
+  const entry = entries[currentIndex];
+  const hasEntry = !!entry;
+
+  $("progress").textContent = hasEntry
+    ? `${currentIndex + 1} / ${entries.length} 件`
+    : `${entries.length} 件登録されています`;
+
+  $("studyTitle").textContent = hasEntry
+    ? entry.title
+    : "文章を登録してください";
+
+  $("studyBody").textContent = hasEntry
+    ? entry.body
+    : "「文章を登録」から学習したい文章を追加できます。";
+
+  $("studyAnswer").textContent = hasEntry
+    ? (entry.answer || "答え・解説は登録されていません。")
+    : "";
+
+  $("answerArea").classList.toggle(
+    "hidden",
+    !hasEntry || studyMode !== "qa" || !answerVisible
+  );
+
+  $("answerControls").classList.toggle(
+    "hidden", !hasEntry || studyMode !== "qa"
+  );
+
+  $("showAnswerBtn").textContent = answerVisible
+    ? "答えを隠す"
+    : "答えを表示する";
+
+  $("showAnswerBtn").disabled = !hasEntry;
+  $("prevBtn").disabled = !hasEntry;
+  $("nextBtn").disabled = !hasEntry;
+  $("editCurrentBtn").disabled = !hasEntry;
+}
+
+// 答えを表示・非表示
+$("showAnswerBtn").onclick = () => {
+  answerVisible = !answerVisible;
+  renderStudy();
+};
+
+// 前へ・次へ
+$("prevBtn").onclick = () => {
+  if (!entries.length) return;
+
+  currentIndex = displayMode === "random"
+    ? currentIndex
+    : (currentIndex - 1 + entries.length) % entries.length;
+
+  if (displayMode === "random") chooseRandom();
+
+  answerVisible = false;
+  renderStudy();
+};
+
+$("nextBtn").onclick = () => {
+  if (!entries.length) return;
+
+  if (displayMode === "random") {
+    chooseRandom();
+  } else {
+    currentIndex = (currentIndex + 1) % entries.length;
+  }
+
+  answerVisible = false;
+  renderStudy();
+};
+
+// 新規登録フォーム
+function resetForm() {
+  editingId = null;
+  $("titleInput").value = "";
+  $("bodyInput").value = "";
+  $("answerInput").value = "";
+  $("formTitle").textContent = "新しい文章を登録";
+  $("saveBtn").textContent = "登録する";
+  $("cancelBtn").classList.add("hidden");
+}
+
+function openNewEntry() {
+  resetForm();
+  $("status").textContent = "";
+  switchView("register");
+}
+
+// 編集フォームを開く
+function editEntry(id) {
+  const entry = entries.find(item => item.id === id);
+  if (!entry) return;
+
+  editingId = id;
+  $("titleInput").value = entry.title;
+  $("bodyInput").value = entry.body;
+  $("answerInput").value = entry.answer || "";
+  $("formTitle").textContent = "文章を編集";
+  $("saveBtn").textContent = "変更を保存";
+  $("cancelBtn").classList.remove("hidden");
+  $("status").textContent = "";
+
+  switchView("register");
+  $("titleInput").focus();
+}
+
+$("editCurrentBtn").onclick = () => {
+  const entry = entries[currentIndex];
+  if (entry) editEntry(entry.id);
+};
+
+$("cancelBtn").onclick = () => {
+  resetForm();
+  switchView("list");
+};
+
+// 登録・更新
+$("saveBtn").onclick = () => {
+  const title = $("titleInput").value.trim();
+  const body = $("bodyInput").value.trim();
+  const answer = $("answerInput").value.trim();
+
+  if (!title || !body) {
+    $("status").textContent = "タイトルと文章を入力してください。";
+    return;
+  }
+
+  if (editingId) {
+    const index = entries.findIndex(item => item.id === editingId);
+    if (index === -1) return;
+
+    const oldEntry = entries[index];
+
+    entries[index] = {
+      ...oldEntry,
+      title,
+      body,
+      answer
+    };
+
+    currentIndex = index;
+  } else {
+    const newEntry = {
+      id: (crypto.randomUUID
+        ? crypto.randomUUID()
+        : Date.now().toString() + Math.random().toString(36).slice(2)),
+      title,
+      body,
+      answer
+    };
+
+    entries.push(newEntry);
+    currentIndex = entries.length - 1;
+  }
+
+  if (!saveEntries()) {
+    $("status").textContent +=
+      " データが保存されていない可能性があります。";
+    return;
+  }
+
+  resetForm();
+  renderStudy();
+  renderList();
+  switchView("study");
+};
+
+// 一覧表示
+function renderList() {
+  $("listCount").textContent = `登録件数：${entries.length} 件`;
+
+  const list = $("entryList");
+  list.replaceChildren();
+
+  if (!entries.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = "まだ文章が登録されていません。";
+    list.appendChild(empty);
+    return;
+  }
+
+  entries.forEach((entry, index) => {
+    const container = document.createElement("article");
+    container.className = "entry";
+
+    const title = document.createElement("div");
+    title.className = "entry-title";
+    title.textContent = `${index + 1}. ${entry.title}`;
+
+    const preview = document.createElement("div");
+    preview.className = "entry-preview";
+    preview.textContent = entry.body;
+
+    const actions = document.createElement("div");
+    actions.className = "entry-actions";
+
+    const studyButton = document.createElement("button");
+    studyButton.className = "primary";
+    studyButton.textContent = "学習する";
+    studyButton.onclick = () => {
+      currentIndex = index;
+      answerVisible = false;
+      switchView("study");
+    };
+
+    const editButton = document.createElement("button");
+    editButton.className = "secondary";
+    editButton.textContent = "編集";
+    editButton.onclick = () => editEntry(entry.id);
+
+    const deleteButton = document.createElement("button");
+    deleteButton.className = "danger";
+    deleteButton.textContent = "削除";
+    deleteButton.onclick = () => deleteEntry(entry.id);
+
+    actions.append(studyButton, editButton, deleteButton);
+    container.append(title, preview, actions);
+    list.appendChild(container);
+  });
+}
+
+// 削除
+function deleteEntry(id) {
+  const entry = entries.find(item => item.id === id);
+  if (!entry) return;
+
+  if (!confirm(`「${entry.title}」を削除しますか？`)) return;
+
+  const oldEntries = [...entries];
+  entries = entries.filter(item => item.id !== id);
+
+  if (!saveEntries()) {
+    entries = oldEntries;
+    renderStudy();
+    renderList();
+    return;
+  }
+
+  if (editingId === id) resetForm();
+
+  currentIndex = Math.min(
+    currentIndex,
+    Math.max(0, entries.length - 1)
+  );
+
+  answerVisible = false;
+  renderStudy();
+  renderList();
+}
+
+// 初期表示
+renderStudy();
+renderList();
+</script>
+</body>
+</html>
