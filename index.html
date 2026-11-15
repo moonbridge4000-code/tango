@@ -21,7 +21,7 @@ body {
   line-height: 1.7;
 }
 
-button, input, textarea {
+button, input, textarea, select {
   font: inherit;
 }
 
@@ -211,7 +211,7 @@ button.danger {
   font-weight: 600;
 }
 
-input, textarea {
+input, textarea, select {
   display: block;
   width: 100%;
   margin-bottom: 12px;
@@ -233,7 +233,7 @@ textarea {
   min-height: 100px;
 }
 
-input:focus, textarea:focus {
+input:focus, textarea:focus, select:focus {
   outline: 2px solid #bbbbbb;
   outline-offset: 1px;
 }
@@ -376,6 +376,7 @@ footer {
 
     <div class="card">
       <div class="card-label">学習カード</div>
+      <div id="studyMeta" class="muted"></div>
       <h2 id="studyTitle" class="card-title">
         文章を登録してください
       </h2>
@@ -446,6 +447,14 @@ footer {
     <input id="categoryInput" maxlength="60" list="categoryOptions" placeholder="例：資格試験">
     <datalist id="categoryOptions"></datalist>
 
+    <label class="form-label" for="importanceInput">重要度</label>
+    <select id="importanceInput">
+      <option value="S">S：最重要</option>
+      <option value="A">A：重要</option>
+      <option value="B" selected>B：通常</option>
+      <option value="C">C：低め</option>
+    </select>
+
     <label class="form-label" for="titleInput">タイトル</label>
     <input id="titleInput" maxlength="200"
       placeholder="例：主任職試験・序論">
@@ -514,7 +523,8 @@ try {
       title: item.title,
       body: item.body,
       answer: typeof item.answer === "string" ? item.answer : "",
-      category: typeof item.category === "string" ? item.category : ""
+      category: typeof item.category === "string" ? item.category : "",
+      importance: ["S", "A", "B", "C"].includes(item.importance) ? item.importance : "B"
     }));
   }
 
@@ -720,7 +730,8 @@ $("importFile").onchange = async event => {
       title: item.title,
       body: item.body,
       answer: typeof item.answer === "string" ? item.answer : "",
-      category: typeof item.category === "string" ? item.category : ""
+      category: typeof item.category === "string" ? item.category : "",
+      importance: ["S", "A", "B", "C"].includes(item.importance) ? item.importance : "B"
     }));
     const importedCategories = [...new Set(data.categories.filter(
       value => typeof value === "string" && value.trim()
@@ -856,6 +867,10 @@ function renderStudy() {
     ? `${currentIndex + 1} / ${studyEntries.length} 件（全 ${entries.length} 件）`
     : `${studyEntries.length} 件登録されています`;
 
+  $("studyMeta").textContent = hasEntry
+    ? `重要度：${entry.importance || "B"}　／　${entry.category || "未分類"}`
+    : "";
+
   $("studyTitle").textContent = hasEntry
     ? entry.title
     : "文章を登録してください";
@@ -926,6 +941,7 @@ $("nextBtn").onclick = () => {
 function resetForm() {
   editingId = null;
   $("categoryInput").value = "";
+  $("importanceInput").value = "B";
   $("titleInput").value = "";
   $("bodyInput").value = "";
   $("answerInput").value = "";
@@ -947,6 +963,7 @@ function editEntry(id) {
 
   editingId = id;
   $("categoryInput").value = entry.category || "";
+  $("importanceInput").value = entry.importance || "B";
   $("titleInput").value = entry.title;
   $("bodyInput").value = entry.body;
   $("answerInput").value = entry.answer || "";
@@ -972,6 +989,7 @@ $("cancelBtn").onclick = () => {
 // 登録・更新
 $("saveBtn").onclick = () => {
   const category = $("categoryInput").value.trim();
+  const importance = $("importanceInput").value;
   const title = $("titleInput").value.trim();
   const body = $("bodyInput").value.trim();
   const answer = $("answerInput").value.trim();
@@ -990,6 +1008,7 @@ $("saveBtn").onclick = () => {
     entries[index] = {
       ...oldEntry,
       category,
+      importance,
       title,
       body,
       answer
@@ -1002,6 +1021,7 @@ $("saveBtn").onclick = () => {
         ? crypto.randomUUID()
         : Date.now().toString() + Math.random().toString(36).slice(2)),
       category,
+      importance,
       title,
       body,
       answer
@@ -1063,7 +1083,7 @@ function renderList() {
 
     const title = document.createElement("div");
     title.className = "entry-title";
-    title.textContent = `${entry.category ? "【" + entry.category + "】 " : "【未分類】 "}${entry.title}`;
+    title.textContent = `[${entry.importance || "B"}] ${entry.category ? "【" + entry.category + "】 " : "【未分類】 "}${entry.title}`;
 
     const preview = document.createElement("div");
     preview.className = "entry-preview";
