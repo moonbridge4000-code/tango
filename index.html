@@ -368,9 +368,9 @@ footer {
       </button>
     </div>
 
-    <label class="form-label" for="studyCategoryFilter">学習するカテゴリ</label>
-    <select id="studyCategoryFilter">
-      <option value="">すべてのカテゴリ</option>
+    <label class="form-label" for="studyTitleFilter">学習するタイトル（分類）</label>
+    <select id="studyTitleFilter">
+      <option value="">すべてのタイトル</option>
     </select>
     <p id="progress" class="progress">0 件登録されています</p>
 
@@ -414,20 +414,11 @@ footer {
   <section id="listView" class="panel hidden">
     <h2>登録した文章</h2>
     <p id="listCount" class="muted"></p>
-    <label class="form-label" for="listCategoryFilter">表示するカテゴリ</label>
-    <select id="listCategoryFilter">
-      <option value="">すべてのカテゴリ</option>
+    <label class="form-label" for="listTitleFilter">表示するタイトル（分類）</label>
+    <select id="listTitleFilter">
+      <option value="">すべてのタイトル</option>
     </select>
     <div id="entryList"></div>
-
-    <div class="category-tools">
-      <h3>カテゴリ管理</h3>
-      <p class="muted">カテゴリを追加したり、名前を変更・削除できます。削除したカテゴリの文章は「未分類」になります。</p>
-      <label class="form-label" for="newCategoryInput">新しいカテゴリ名</label>
-      <input id="newCategoryInput" maxlength="60" placeholder="例：英単語、資格試験、仕事">
-      <button id="addCategoryBtn" class="action-button secondary">カテゴリを追加</button>
-      <div id="categoryList"></div>
-    </div>
 
     <div class="backup-tools">
       <h3>データのバックアップ・共有</h3>
@@ -443,10 +434,6 @@ footer {
   <section id="registerView" class="panel hidden">
     <h2 id="formTitle">新しい文章を登録</h2>
 
-    <label class="form-label" for="categoryInput">カテゴリ（任意）</label>
-    <input id="categoryInput" maxlength="60" list="categoryOptions" placeholder="例：資格試験">
-    <datalist id="categoryOptions"></datalist>
-
     <label class="form-label" for="importanceInput">重要度</label>
     <select id="importanceInput">
       <option value="S">S：最重要</option>
@@ -455,9 +442,10 @@ footer {
       <option value="C">C：低め</option>
     </select>
 
-    <label class="form-label" for="titleInput">タイトル</label>
-    <input id="titleInput" maxlength="200"
-      placeholder="例：主任職試験・序論">
+    <label class="form-label" for="titleInput">タイトル（分類名）</label>
+    <input id="titleInput" maxlength="60"
+      placeholder="例：主任職試験、英単語、仕事">
+    <p class="muted">同じタイトルを付けた文章は、同じ分類としてまとめて学習・表示できます。</p>
 
     <label class="form-label" for="bodyInput">文章・問題文</label>
     <textarea id="bodyInput"
@@ -493,10 +481,7 @@ footer {
 
 <script>
 const STORAGE_KEY = "simpleStudyAppEntries_v1";
-const CATEGORY_KEY = "simpleStudyAppCategories_v1";
-
 let entries = [];
-let categories = [];
 let currentIndex = 0;
 let studyMode = "qa";
 let displayMode = "ordered";
@@ -528,20 +513,16 @@ try {
     }));
   }
 
-  const savedCategories = localStorage.getItem(CATEGORY_KEY);
-  if (savedCategories) {
-    const parsedCategories = JSON.parse(savedCategories);
-    if (Array.isArray(parsedCategories)) {
-      categories = [...new Set(parsedCategories.filter(
-        value => typeof value === "string" && value.trim()
-      ).map(value => value.trim()))];
-    }
-  }
-  entries.forEach(entry => {
-    if (entry.category && !categories.includes(entry.category)) {
-      categories.push(entry.category);
-    }
-  });
+  // 旧データ移行：カテゴリが設定されている文章は、カテゴリ名を新しいタイトルにします。
+  // 旧タイトルは引き継がず、カテゴリ未設定の文章は元タイトルを残します。
+  entries = entries.map(entry => ({
+    id: entry.id,
+    title: entry.category || entry.title,
+    body: entry.body,
+    answer: entry.answer,
+    importance: entry.importance
+  }));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
 } catch (error) {
   alert("保存データを読み込めませんでした。ブラウザの保存領域を確認してください。");
 }
@@ -550,7 +531,6 @@ try {
 function saveEntries() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-    localStorage.setItem(CATEGORY_KEY, JSON.stringify(categories));
     $("status").textContent = "保存しました。";
     return true;
   } catch (error) {
@@ -563,30 +543,21 @@ function saveEntries() {
 function saveAllData() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-    localStorage.setItem(CATEGORY_KEY, JSON.stringify(categories));
     return true;
   } catch (error) {
     return false;
   }
 }
 
-function refreshCategoryControls() {
-  const options = categories.map(category =>
-    `<option value="${escapeHtml(category)}"></option>`
-  ).join("");
-  $("categoryOptions").innerHTML = options;
-
-  ["studyCategoryFilter", "listCategoryFilter"].forEach(id => {
+function refreshTitleControls() {
+  const titles = [...new Set(entries.map(entry => entry.title).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja"));
+  ["studyTitleFilter", "listTitleFilter"].forEach(id => {
     const select = $(id);
     const oldValue = select.value;
-    select.replaceChildren(new Option("すべてのカテゴリ", ""));
-    categories.forEach(category => {
-      select.add(new Option(category, category));
-    });
-    if (categories.includes(oldValue)) select.value = oldValue;
+    select.replaceChildren(new Option("すべてのタイトル", ""));
+    titles.forEach(title => select.add(new Option(title, title)));
+    if (titles.includes(oldValue)) select.value = oldValue;
   });
-
-  renderCategoryList();
 }
 
 function escapeHtml(value) {
@@ -596,109 +567,19 @@ function escapeHtml(value) {
   })[char]);
 }
 
-function renderCategoryList() {
-  const list = $("categoryList");
-  list.replaceChildren();
-
-  if (!categories.length) {
-    const message = document.createElement("p");
-    message.className = "muted";
-    message.textContent = "カテゴリはまだありません。";
-    list.appendChild(message);
-    return;
-  }
-
-  categories.forEach(category => {
-    const row = document.createElement("div");
-    row.className = "category-row";
-
-    const name = document.createElement("span");
-    name.textContent = category;
-
-    const rename = document.createElement("button");
-    rename.textContent = "名前変更";
-    rename.onclick = () => {
-      const nextName = prompt("新しいカテゴリ名を入力してください。", category);
-      if (nextName === null) return;
-      const trimmed = nextName.trim();
-      if (!trimmed) {
-        alert("カテゴリ名を入力してください。");
-        return;
-      }
-      if (trimmed !== category && categories.includes(trimmed)) {
-        alert("そのカテゴリ名はすでに存在します。");
-        return;
-      }
-      categories = categories.map(item => item === category ? trimmed : item);
-      entries.forEach(entry => {
-        if (entry.category === category) entry.category = trimmed;
-      });
-      if (!saveAllData()) {
-        alert("保存に失敗しました。");
-        return;
-      }
-      refreshCategoryControls();
-      renderList();
-      renderStudy();
-    };
-
-    const remove = document.createElement("button");
-    remove.className = "danger";
-    remove.textContent = "削除";
-    remove.onclick = () => {
-      if (!confirm(`カテゴリ「${category}」を削除しますか？\nこのカテゴリの文章は未分類になります。`)) return;
-      categories = categories.filter(item => item !== category);
-      entries.forEach(entry => {
-        if (entry.category === category) entry.category = "";
-      });
-      if (!saveAllData()) {
-        alert("保存に失敗しました。");
-        return;
-      }
-      refreshCategoryControls();
-      renderList();
-      renderStudy();
-    };
-
-    row.append(name, rename, remove);
-    list.appendChild(row);
-  });
-}
-
-$("addCategoryBtn").onclick = () => {
-  const value = $("newCategoryInput").value.trim();
-  if (!value) {
-    alert("カテゴリ名を入力してください。");
-    return;
-  }
-  if (categories.includes(value)) {
-    alert("そのカテゴリはすでに登録されています。");
-    return;
-  }
-  categories.push(value);
-  $("newCategoryInput").value = "";
-  if (!saveAllData()) {
-    categories.pop();
-    alert("保存に失敗しました。");
-    return;
-  }
-  refreshCategoryControls();
-};
-
-$("studyCategoryFilter").onchange = () => {
+$("studyTitleFilter").onchange = () => {
   currentIndex = 0;
   answerVisible = false;
   renderStudy();
 };
 
-$("listCategoryFilter").onchange = renderList;
+$("listTitleFilter").onchange = renderList;
 
 $("exportBtn").onclick = () => {
   const backup = {
     format: "文章学習帳バックアップ",
-    version: 2,
+    version: 3,
     exportedAt: new Date().toISOString(),
-    categories,
     entries
   };
   const blob = new Blob([JSON.stringify(backup, null, 2)], {
@@ -719,48 +600,36 @@ $("importFile").onchange = async event => {
   if (!file) return;
   try {
     const data = JSON.parse(await file.text());
-    if (!data || !Array.isArray(data.entries) || !Array.isArray(data.categories)) {
-      throw new Error("形式が違います");
-    }
+    if (!data || !Array.isArray(data.entries)) throw new Error("形式が違います");
+
     const importedEntries = data.entries.filter(item =>
       item && typeof item.id === "string" &&
       typeof item.title === "string" && typeof item.body === "string"
     ).map(item => ({
       id: item.id,
-      title: item.title,
+      // 旧形式のバックアップならカテゴリ名をタイトルとして採用
+      title: (typeof item.category === "string" && item.category.trim())
+        ? item.category.trim() : item.title,
       body: item.body,
       answer: typeof item.answer === "string" ? item.answer : "",
-      category: typeof item.category === "string" ? item.category : "",
       importance: ["S", "A", "B", "C"].includes(item.importance) ? item.importance : "B"
     }));
-    const importedCategories = [...new Set(data.categories.filter(
-      value => typeof value === "string" && value.trim()
-    ).map(value => value.trim()))];
 
-    importedEntries.forEach(entry => {
-      if (entry.category && !importedCategories.includes(entry.category)) {
-        importedCategories.push(entry.category);
-      }
-    });
-
-    if (!confirm(`バックアップから ${importedEntries.length} 件の文章と ${importedCategories.length} 件のカテゴリを読み込みます。\n現在のデータは置き換えられます。続けますか？`)) {
+    if (!confirm(`バックアップから ${importedEntries.length} 件の文章を読み込みます。\n現在のデータは置き換えられます。続けますか？`)) {
       event.target.value = "";
       return;
     }
 
     const oldEntries = entries;
-    const oldCategories = categories;
     entries = importedEntries;
-    categories = importedCategories;
     if (!saveAllData()) {
       entries = oldEntries;
-      categories = oldCategories;
       throw new Error("端末への保存に失敗しました");
     }
 
     currentIndex = 0;
     answerVisible = false;
-    refreshCategoryControls();
+    refreshTitleControls();
     renderStudy();
     renderList();
     $("backupStatus").textContent = "バックアップを読み込みました。";
@@ -853,8 +722,8 @@ function chooseRandom() {
 
 // 学習カード表示
 function getStudyEntries() {
-  const selected = $("studyCategoryFilter").value;
-  return selected ? entries.filter(entry => entry.category === selected) : entries;
+  const selected = $("studyTitleFilter").value;
+  return selected ? entries.filter(entry => entry.title === selected) : entries;
 }
 
 function renderStudy() {
@@ -868,7 +737,7 @@ function renderStudy() {
     : `${studyEntries.length} 件登録されています`;
 
   $("studyMeta").textContent = hasEntry
-    ? `重要度：${entry.importance || "B"}　／　${entry.category || "未分類"}`
+    ? `重要度：${entry.importance || "B"}`
     : "";
 
   $("studyTitle").textContent = hasEntry
@@ -940,7 +809,6 @@ $("nextBtn").onclick = () => {
 // 新規登録フォーム
 function resetForm() {
   editingId = null;
-  $("categoryInput").value = "";
   $("importanceInput").value = "B";
   $("titleInput").value = "";
   $("bodyInput").value = "";
@@ -962,7 +830,6 @@ function editEntry(id) {
   if (!entry) return;
 
   editingId = id;
-  $("categoryInput").value = entry.category || "";
   $("importanceInput").value = entry.importance || "B";
   $("titleInput").value = entry.title;
   $("bodyInput").value = entry.body;
@@ -988,7 +855,6 @@ $("cancelBtn").onclick = () => {
 
 // 登録・更新
 $("saveBtn").onclick = () => {
-  const category = $("categoryInput").value.trim();
   const importance = $("importanceInput").value;
   const title = $("titleInput").value.trim();
   const body = $("bodyInput").value.trim();
@@ -1007,7 +873,6 @@ $("saveBtn").onclick = () => {
 
     entries[index] = {
       ...oldEntry,
-      category,
       importance,
       title,
       body,
@@ -1020,7 +885,6 @@ $("saveBtn").onclick = () => {
       id: (crypto.randomUUID
         ? crypto.randomUUID()
         : Date.now().toString() + Math.random().toString(36).slice(2)),
-      category,
       importance,
       title,
       body,
@@ -1031,16 +895,12 @@ $("saveBtn").onclick = () => {
     currentIndex = entries.length - 1;
   }
 
-  if (category && !categories.includes(category)) {
-    categories.push(category);
-  }
-
   if (!saveEntries()) {
     $("status").textContent +=
       " データが保存されていない可能性があります。";
     return;
   }
-  refreshCategoryControls();
+  refreshTitleControls();
 
   resetForm();
   renderStudy();
@@ -1063,10 +923,10 @@ function renderList() {
     return;
   }
 
-  const selectedCategory = $("listCategoryFilter").value;
+  const selectedTitle = $("listTitleFilter").value;
   const visibleEntries = entries
     .map((entry, originalIndex) => ({ entry, originalIndex }))
-    .filter(item => !selectedCategory || item.entry.category === selectedCategory);
+    .filter(item => !selectedTitle || item.entry.title === selectedTitle);
 
   if (!visibleEntries.length) {
     const empty = document.createElement("div");
@@ -1083,7 +943,7 @@ function renderList() {
 
     const title = document.createElement("div");
     title.className = "entry-title";
-    title.textContent = `[${entry.importance || "B"}] ${entry.category ? "【" + entry.category + "】 " : "【未分類】 "}${entry.title}`;
+    title.textContent = `[${entry.importance || "B"}] ${entry.title}`;
 
     const preview = document.createElement("div");
     preview.className = "entry-preview";
@@ -1147,7 +1007,7 @@ function deleteEntry(id) {
 }
 
 // 初期表示
-refreshCategoryControls();
+refreshTitleControls();
 renderStudy();
 renderList();
 </script>
